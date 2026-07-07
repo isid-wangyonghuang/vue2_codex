@@ -397,7 +397,12 @@ select,
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 1080px;
+}
+
+.vehicle-table th:nth-child(6),
+.vehicle-table td:nth-child(6) {
+  min-width: 112px;
 }
 
 th {
@@ -417,7 +422,7 @@ td {
   vertical-align: middle;
 }
 
-.product-cell {
+.vehicle-cell {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -435,17 +440,17 @@ td {
   font-weight: 800;
 }
 
-.product-cell strong,
-.product-cell span {
+.vehicle-cell strong,
+.vehicle-cell span {
   display: block;
 }
 
-.product-cell strong {
+.vehicle-cell strong {
   color: #111827;
   margin-bottom: 2px;
 }
 
-.product-cell span {
+.vehicle-cell span {
   color: #64748b;
   font-size: 13px;
 }
@@ -625,7 +630,7 @@ td {
   background: rgba(15, 23, 42, 0.52);
 }
 
-.product-modal {
+.vehicle-modal {
   width: min(720px, 100%);
   max-height: calc(100vh - 40px);
   overflow-y: auto;
