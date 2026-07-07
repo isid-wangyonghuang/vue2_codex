@@ -239,7 +239,9 @@
           </label>
           <label>
             メーカー
-            <input v-model.trim="form.maker" required />
+            <select v-model="form.maker" required>
+              <option v-for="maker in makers" :key="maker" :value="maker">{{ maker }}</option>
+            </select>
           </label>
           <label>
             年式
@@ -267,7 +269,9 @@
           </label>
           <label>
             店舗
-            <input v-model.trim="form.store" required />
+            <select v-model="form.store" required>
+              <option v-for="store in stores" :key="store" :value="store">{{ store }}</option>
+            </select>
           </label>
           <label class="full">
             状態
@@ -370,6 +374,7 @@ const navItems = [
 const apiStatusLabel = computed(() => apiConnected.value ? 'Spring API 接続中' : 'デモデータ表示')
 const pageTitle = computed(() => navItems.find(item => item.id === currentView.value)?.label || '車両管理')
 const makers = computed(() => [...new Set(vehicles.value.map(vehicle => vehicle.maker))].sort())
+const stores = computed(() => [...new Set(vehicles.value.map(vehicle => vehicle.store))].sort())
 
 const filteredVehicles = computed(() => {
   const keyword = query.value.toLowerCase()

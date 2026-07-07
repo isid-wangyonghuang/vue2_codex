@@ -18,27 +18,55 @@
     <result property="inspection" column="inspection"/>
   </resultMap>
 
-  <sql id="VehicleColumns">
-    id, name, stock_no, maker, year, mileage, price, status, store, fuel, transmission, inspection
+  <sql id="VehicleJoinColumns">
+    v.id,
+    v.name,
+    v.stock_no,
+    m.name AS maker,
+    v.model_year AS year,
+    v.mileage,
+    v.price,
+    s.code AS status,
+    st.name AS store,
+    v.fuel,
+    v.transmission,
+    v.inspection
+  </sql>
+
+  <sql id="VehicleJoin">
+    FROM vehicles v
+    INNER JOIN makers m ON v.maker_id = m.id
+    INNER JOIN stores st ON v.store_id = st.id
+    INNER JOIN vehicle_statuses s ON v.status_code = s.code
   </sql>
 
   <select id="findAll" resultMap="VehicleResultMap">
-    SELECT <include refid="VehicleColumns"/>
-    FROM vehicles
-    ORDER BY id
+    SELECT <include refid="VehicleJoinColumns"/>
+    <include refid="VehicleJoin"/>
+    ORDER BY v.id
   </select>
 
   <select id="findById" resultMap="VehicleResultMap">
-    SELECT <include refid="VehicleColumns"/>
-    FROM vehicles
-    WHERE id = #{id}
+    SELECT <include refid="VehicleJoinColumns"/>
+    <include refid="VehicleJoin"/>
+    WHERE v.id = #{id}
   </select>
 
   <insert id="insert" parameterType="Vehicle" useGeneratedKeys="true" keyProperty="id">
     INSERT INTO vehicles (
-      name, stock_no, maker, year, mileage, price, status, store, fuel, transmission, inspection
+      name, stock_no, maker_id, store_id, status_code, model_year, mileage, price, fuel, transmission, inspection
     ) VALUES (
-      #{name}, #{stockNo}, #{maker}, #{year}, #{mileage}, #{price}, #{status}, #{store}, #{fuel}, #{transmission}, #{inspection}
+      #{name},
+      #{stockNo},
+      (SELECT id FROM makers WHERE name = #{maker}),
+      (SELECT id FROM stores WHERE name = #{store}),
+      #{status},
+      #{year},
+      #{mileage},
+      #{price},
+      #{fuel},
+      #{transmission},
+      #{inspection}
     )
   </insert>
 
@@ -47,12 +75,12 @@
     SET
       name = #{name},
       stock_no = #{stockNo},
-      maker = #{maker},
-      year = #{year},
+      maker_id = (SELECT id FROM makers WHERE name = #{maker}),
+      store_id = (SELECT id FROM stores WHERE name = #{store}),
+      status_code = #{status},
+      model_year = #{year},
       mileage = #{mileage},
       price = #{price},
-      status = #{status},
-      store = #{store},
       fuel = #{fuel},
       transmission = #{transmission},
       inspection = #{inspection}

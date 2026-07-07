@@ -67,6 +67,19 @@ npm run build
 | PUT | `/api/vehicles/{id}` | 車両更新 |
 | DELETE | `/api/vehicles/{id}` | 車両削除 |
 
+## データベース練習用テーブル
+
+このプロジェクトは練習用に以下の関連テーブルを使います。
+
+- `makers`
+- `stores`
+- `vehicle_statuses`
+- `vehicles`
+
+`vehicles` は `maker_id`、`store_id`、`status_code` を持ち、MyBatis の XML Mapper で JOIN して画面表示用データを返します。
+
+詳しい表構成と練習 SQL は [DATABASE_PRACTICE.md](./DATABASE_PRACTICE.md) を確認してください。
+
 ## 補足
 
 Spring Boot API が起動していない場合、Vue 画面はデモデータを表示します。API を起動すると H2 データベース上のデータに切り替わります。
