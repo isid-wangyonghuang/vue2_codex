@@ -397,7 +397,7 @@ select,
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 920px;
+  min-width: 980px;
 }
 
 th {
@@ -417,11 +417,11 @@ td {
   vertical-align: middle;
 }
 
-.student-cell {
+.product-cell {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 150px;
+  min-width: 190px;
 }
 
 .avatar {
@@ -435,17 +435,17 @@ td {
   font-weight: 800;
 }
 
-.student-cell strong,
-.student-cell span {
+.product-cell strong,
+.product-cell span {
   display: block;
 }
 
-.student-cell strong {
+.product-cell strong {
   color: #111827;
   margin-bottom: 2px;
 }
 
-.student-cell span {
+.product-cell span {
   color: #64748b;
   font-size: 13px;
 }
@@ -625,7 +625,7 @@ td {
   background: rgba(15, 23, 42, 0.52);
 }
 
-.student-modal {
+.product-modal {
   width: min(720px, 100%);
   max-height: calc(100vh - 40px);
   overflow-y: auto;

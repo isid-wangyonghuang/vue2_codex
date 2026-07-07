@@ -24,15 +24,15 @@
       </nav>
 
       <div class="sidebar-footer">
-        <p>{{ text.currentTerm }}</p>
-        <strong>{{ text.termName }}</strong>
+        <p>{{ text.currentCycle }}</p>
+        <strong>{{ text.cycleName }}</strong>
       </div>
     </aside>
 
     <main class="workspace">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Academic Desk</p>
+          <p class="eyebrow">Product Desk</p>
           <h1>{{ pageTitle }}</h1>
         </div>
         <div class="topbar-actions">
@@ -44,12 +44,12 @@
               </option>
             </select>
           </label>
-          <button type="button" class="icon-button" :title="text.exportData" @click="exportStudents">
+          <button type="button" class="icon-button" :title="text.exportData" @click="exportProducts">
             <Download :size="19" aria-hidden="true" />
           </button>
           <button type="button" class="primary-button" @click="openCreateModal">
             <Plus :size="18" aria-hidden="true" />
-            <span>{{ text.addStudent }}</span>
+            <span>{{ text.addProduct }}</span>
           </button>
         </div>
       </header>
@@ -69,17 +69,17 @@
         <section class="panel">
           <div class="panel-header">
             <div>
-              <h2>{{ text.studentList }}</h2>
-              <p>{{ text.totalRecords(filteredStudents.length) }}</p>
+              <h2>{{ text.productList }}</h2>
+              <p>{{ text.totalRecords(filteredProducts.length) }}</p>
             </div>
             <div class="filters">
               <label class="search-field">
                 <Search :size="18" aria-hidden="true" />
                 <input v-model.trim="query" type="search" :placeholder="text.searchPlaceholder" />
               </label>
-              <select v-model="classFilter" :aria-label="text.classFilterLabel">
-                <option value="all">{{ text.allClasses }}</option>
-                <option v-for="className in classes" :key="className" :value="className">{{ className }}</option>
+              <select v-model="categoryFilter" :aria-label="text.categoryFilterLabel">
+                <option value="all">{{ text.allCategories }}</option>
+                <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
               </select>
               <select v-model="statusFilter" :aria-label="text.statusFilterLabel">
                 <option value="all">{{ text.allStatuses }}</option>
@@ -92,50 +92,50 @@
             <table>
               <thead>
                 <tr>
-                  <th>{{ text.table.student }}</th>
-                  <th>{{ text.table.studentNo }}</th>
-                  <th>{{ text.table.className }}</th>
-                  <th>{{ text.table.score }}</th>
-                  <th>{{ text.table.attendance }}</th>
+                  <th>{{ text.table.product }}</th>
+                  <th>{{ text.table.sku }}</th>
+                  <th>{{ text.table.category }}</th>
+                  <th>{{ text.table.price }}</th>
+                  <th>{{ text.table.stock }}</th>
                   <th>{{ text.table.status }}</th>
-                  <th>{{ text.table.phone }}</th>
+                  <th>{{ text.table.supplier }}</th>
                   <th class="actions-col">{{ text.table.actions }}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="student in filteredStudents" :key="student.id">
+                <tr v-for="product in filteredProducts" :key="product.id">
                   <td>
-                    <div class="student-cell">
-                      <div class="avatar">{{ student.name.slice(0, 1) }}</div>
+                    <div class="product-cell">
+                      <div class="avatar">{{ product.name.slice(0, 1) }}</div>
                       <div>
-                        <strong>{{ student.name }}</strong>
-                        <span>{{ text.gender[student.gender] }} · {{ text.age(student.age) }}</span>
+                        <strong>{{ product.name }}</strong>
+                        <span>{{ text.sales(product.sales) }} · {{ product.unit }}</span>
                       </div>
                     </div>
                   </td>
-                  <td>{{ student.studentNo }}</td>
-                  <td>{{ student.className }}</td>
+                  <td>{{ product.sku }}</td>
+                  <td>{{ product.category }}</td>
+                  <td>{{ formatPrice(product.price) }}</td>
                   <td>
                     <div class="score">
-                      <span>{{ student.score }}</span>
-                      <div class="meter"><i :style="{ width: student.score + '%' }"></i></div>
+                      <span>{{ product.stock }}</span>
+                      <div class="meter"><i :style="{ width: stockPercent(product.stock) + '%' }"></i></div>
                     </div>
                   </td>
-                  <td>{{ student.attendance }}%</td>
-                  <td><span :class="['status-pill', statusTone(student.status)]">{{ text.status[student.status] }}</span></td>
-                  <td>{{ student.phone }}</td>
+                  <td><span :class="['status-pill', statusTone(product.status)]">{{ text.status[product.status] }}</span></td>
+                  <td>{{ product.supplier }}</td>
                   <td>
                     <div class="row-actions">
-                      <button type="button" :title="text.edit" @click="openEditModal(student)">
+                      <button type="button" :title="text.edit" @click="openEditModal(product)">
                         <Pencil :size="17" aria-hidden="true" />
                       </button>
-                      <button type="button" :title="text.delete" @click="removeStudent(student.id)">
+                      <button type="button" :title="text.delete" @click="removeProduct(product.id)">
                         <Trash2 :size="17" aria-hidden="true" />
                       </button>
                     </div>
                   </td>
                 </tr>
-                <tr v-if="filteredStudents.length === 0">
+                <tr v-if="filteredProducts.length === 0">
                   <td colspan="8" class="empty-state">{{ text.emptyState }}</td>
                 </tr>
               </tbody>
@@ -144,16 +144,16 @@
         </section>
       </section>
 
-      <section v-else-if="currentView === 'grades'" class="content-grid">
+      <section v-else-if="currentView === 'analytics'" class="content-grid">
         <article class="panel chart-panel">
           <div class="panel-header">
             <div>
-              <h2>{{ text.scoreDistribution }}</h2>
-              <p>{{ text.scoreDistributionNote }}</p>
+              <h2>{{ text.stockDistribution }}</h2>
+              <p>{{ text.stockDistributionNote }}</p>
             </div>
           </div>
           <div class="bars">
-            <div v-for="bucket in scoreBuckets" :key="bucket.label" class="bar-row">
+            <div v-for="bucket in stockBuckets" :key="bucket.label" class="bar-row">
               <span>{{ bucket.label }}</span>
               <div class="bar-track"><i :style="{ width: bucket.percent + '%' }"></i></div>
               <strong>{{ bucket.count }}</strong>
@@ -164,18 +164,18 @@
         <article class="panel ranking-panel">
           <div class="panel-header">
             <div>
-              <h2>{{ text.topScores }}</h2>
-              <p>{{ text.topScoresNote }}</p>
+              <h2>{{ text.topSales }}</h2>
+              <p>{{ text.topSalesNote }}</p>
             </div>
           </div>
           <div class="ranking-list">
-            <div v-for="(student, index) in topStudents" :key="student.id" class="ranking-item">
+            <div v-for="(product, index) in topProducts" :key="product.id" class="ranking-item">
               <span>{{ index + 1 }}</span>
               <div>
-                <strong>{{ student.name }}</strong>
-                <p>{{ student.className }}</p>
+                <strong>{{ product.name }}</strong>
+                <p>{{ product.category }}</p>
               </div>
-              <em>{{ student.score }}</em>
+              <em>{{ product.sales }}</em>
             </div>
           </div>
         </article>
@@ -185,17 +185,17 @@
         <article class="panel">
           <div class="panel-header">
             <div>
-              <h2>{{ text.classOverview }}</h2>
-              <p>{{ text.classOverviewNote }}</p>
+              <h2>{{ text.categoryOverview }}</h2>
+              <p>{{ text.categoryOverviewNote }}</p>
             </div>
           </div>
           <div class="class-list">
-            <div v-for="item in classSummary" :key="item.className" class="class-item">
+            <div v-for="item in categorySummary" :key="item.category" class="class-item">
               <div>
-                <strong>{{ item.className }}</strong>
-                <span>{{ text.memberCount(item.count) }}</span>
+                <strong>{{ item.category }}</strong>
+                <span>{{ text.productCount(item.count) }}</span>
               </div>
-              <p>{{ text.points(item.average) }}</p>
+              <p>{{ formatPrice(item.averagePrice) }}</p>
             </div>
           </div>
         </article>
@@ -221,11 +221,11 @@
     </main>
 
     <div v-if="isModalOpen" class="modal-backdrop" @click.self="closeModal">
-      <form class="student-modal" @submit.prevent="saveStudent">
+      <form class="product-modal" @submit.prevent="saveProduct">
         <div class="modal-header">
           <div>
-            <p class="eyebrow">{{ editingId ? 'Edit Student' : 'New Student' }}</p>
-            <h2>{{ editingId ? text.editStudent : text.addStudent }}</h2>
+            <p class="eyebrow">{{ editingId ? 'Edit Product' : 'New Product' }}</p>
+            <h2>{{ editingId ? text.editProduct : text.addProduct }}</h2>
           </div>
           <button type="button" class="icon-button" :title="text.close" @click="closeModal">
             <X :size="19" aria-hidden="true" />
@@ -238,35 +238,32 @@
             <input v-model.trim="form.name" required />
           </label>
           <label>
-            {{ text.form.studentNo }}
-            <input v-model.trim="form.studentNo" required />
+            {{ text.form.sku }}
+            <input v-model.trim="form.sku" required />
           </label>
           <label>
-            {{ text.form.gender }}
-            <select v-model="form.gender">
-              <option value="male">{{ text.gender.male }}</option>
-              <option value="female">{{ text.gender.female }}</option>
-            </select>
+            {{ text.form.category }}
+            <input v-model.trim="form.category" required />
           </label>
           <label>
-            {{ text.form.age }}
-            <input v-model.number="form.age" type="number" min="6" max="40" required />
+            {{ text.form.unit }}
+            <input v-model.trim="form.unit" required />
           </label>
           <label>
-            {{ text.form.className }}
-            <input v-model.trim="form.className" required />
+            {{ text.form.price }}
+            <input v-model.number="form.price" type="number" min="0" step="0.01" required />
           </label>
           <label>
-            {{ text.form.phone }}
-            <input v-model.trim="form.phone" required />
+            {{ text.form.stock }}
+            <input v-model.number="form.stock" type="number" min="0" required />
           </label>
           <label>
-            {{ text.form.score }}
-            <input v-model.number="form.score" type="number" min="0" max="100" required />
+            {{ text.form.sales }}
+            <input v-model.number="form.sales" type="number" min="0" required />
           </label>
           <label>
-            {{ text.form.attendance }}
-            <input v-model.number="form.attendance" type="number" min="0" max="100" required />
+            {{ text.form.supplier }}
+            <input v-model.trim="form.supplier" required />
           </label>
           <label class="full">
             {{ text.form.status }}
@@ -291,303 +288,294 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import {
-  BookOpen,
+  BarChart3,
+  Boxes,
   ClipboardList,
   Download,
-  GraduationCap,
   Languages,
   LayoutDashboard,
+  Package,
   Pencil,
   Plus,
   Save,
   Search,
+  Tags,
   Trash2,
   TriangleAlert,
-  UserCheck,
-  Users,
   X
 } from '@lucide/vue'
 
-const languageStorageKey = 'student-management-language'
-const studentStorageKey = 'student-management-vue-data-i18n'
-const statusOptions = ['active', 'suspended', 'pending']
+const languageStorageKey = 'product-management-language'
+const productStorageKey = 'product-management-data-i18n'
+const statusOptions = ['active', 'lowStock', 'draft']
 
 const translations = {
   zh: {
-    documentTitle: '学生管理系统',
-    brandMark: '学',
-    appName: '学生管理系统',
-    appSubtitle: '教务后台',
+    documentTitle: '产品管理系统',
+    brandMark: '品',
+    appName: '产品管理系统',
+    appSubtitle: '商品运营后台',
     mainNav: '主导航',
-    currentTerm: '本学期',
-    termName: '2026 春季',
+    currentCycle: '当前周期',
+    cycleName: '2026 春季上新',
     language: '语言',
     exportData: '导出数据',
-    addStudent: '新增学生',
-    editStudent: '编辑学生',
+    addProduct: '新增产品',
+    editProduct: '编辑产品',
     close: '关闭',
     cancel: '取消',
     save: '保存',
     edit: '编辑',
     delete: '删除',
-    allClasses: '全部班级',
+    allCategories: '全部分类',
     allStatuses: '全部状态',
-    classFilterLabel: '按班级筛选',
+    categoryFilterLabel: '按分类筛选',
     statusFilterLabel: '按状态筛选',
-    searchPlaceholder: '搜索姓名、学号、电话',
-    studentList: '学生名单',
-    emptyState: '没有找到符合条件的学生',
-    scoreDistribution: '成绩分布',
-    scoreDistributionNote: '按当前学生名单统计',
-    topScores: '成绩前五',
-    topScoresNote: '便于快速查看优秀学生',
-    classOverview: '班级概览',
-    classOverviewNote: '学生人数与平均成绩',
-    todoTitle: '待办提醒',
-    todoNote: '来自学生状态与出勤数据',
+    searchPlaceholder: '搜索产品名、SKU、供应商',
+    productList: '产品列表',
+    emptyState: '没有找到符合条件的产品',
+    stockDistribution: '库存分布',
+    stockDistributionNote: '按当前产品库存统计',
+    topSales: '销量前五',
+    topSalesNote: '快速查看热销产品',
+    categoryOverview: '分类概览',
+    categoryOverviewNote: '产品数量与平均价格',
+    todoTitle: '运营提醒',
+    todoNote: '来自库存、状态和销量数据',
     nav: {
-      overview: '学生管理',
-      grades: '成绩分析',
-      classes: '班级信息'
+      overview: '产品管理',
+      analytics: '销售分析',
+      categories: '分类信息'
     },
     table: {
-      student: '学生',
-      studentNo: '学号',
-      className: '班级',
-      score: '成绩',
-      attendance: '出勤',
+      product: '产品',
+      sku: 'SKU',
+      category: '分类',
+      price: '价格',
+      stock: '库存',
       status: '状态',
-      phone: '联系电话',
+      supplier: '供应商',
       actions: '操作'
     },
     form: {
-      name: '姓名',
-      studentNo: '学号',
-      gender: '性别',
-      age: '年龄',
-      className: '班级',
-      phone: '联系电话',
-      score: '成绩',
-      attendance: '出勤率',
+      name: '产品名称',
+      sku: 'SKU',
+      category: '分类',
+      unit: '单位',
+      price: '价格',
+      stock: '库存',
+      sales: '销量',
+      supplier: '供应商',
       status: '状态'
     },
-    gender: {
-      male: '男',
-      female: '女'
-    },
     status: {
-      active: '在读',
-      suspended: '休学',
-      pending: '待确认'
+      active: '在售',
+      lowStock: '低库存',
+      draft: '草稿'
     },
     stats: {
-      totalStudents: '学生总数',
-      activeStudents: '在读学生',
-      averageScore: '平均成绩',
+      totalProducts: '产品总数',
+      activeProducts: '在售产品',
+      averagePrice: '平均价格',
       needsAttention: '需关注',
-      classCount: count => `${count} 个班级`,
-      normalStatus: '状态正常',
-      fullScore: '满分 100',
-      warningNote: '成绩或出勤异常'
+      categoryCount: count => `${count} 个分类`,
+      normalStatus: '可正常销售',
+      priceNote: '按当前产品计算',
+      warningNote: '库存或状态异常'
     },
     todos: {
-      lowAttendance: count => `${count} 名学生出勤偏低`,
-      lowAttendanceDesc: '建议联系班主任确认情况',
-      pendingStatus: count => `${count} 条状态待确认`,
-      pendingStatusDesc: '可在学生列表中编辑状态',
-      highScore: count => `${count} 名高分学生`,
-      highScoreDesc: '适合纳入优秀学生观察名单'
+      lowStock: count => `${count} 个产品库存偏低`,
+      lowStockDesc: '建议及时补货或调整库存预警',
+      draft: count => `${count} 个产品仍是草稿`,
+      draftDesc: '可编辑状态后发布到在售',
+      hotSale: count => `${count} 个产品销量超过 800`,
+      hotSaleDesc: '适合加入重点推广清单'
     },
     totalRecords: count => `共 ${count} 条记录`,
-    age: value => `${value} 岁`,
-    memberCount: count => `${count} 名学生`,
-    points: value => `${value} 分`,
+    productCount: count => `${count} 个产品`,
+    sales: value => `销量 ${value}`,
     confirmDelete: name => `确定删除 ${name} 的记录吗？`,
-    csvName: 'students-zh.csv'
+    csvName: 'products-zh.csv',
+    locale: 'zh-CN',
+    currency: 'CNY'
   },
   ja: {
-    documentTitle: '学生管理システム',
-    brandMark: '学',
-    appName: '学生管理システム',
-    appSubtitle: '教務管理',
+    documentTitle: '商品管理システム',
+    brandMark: '品',
+    appName: '商品管理システム',
+    appSubtitle: '商品運営管理',
     mainNav: 'メインナビゲーション',
-    currentTerm: '今学期',
-    termName: '2026 春学期',
+    currentCycle: '現在のサイクル',
+    cycleName: '2026 春の新商品',
     language: '言語',
     exportData: 'データを書き出す',
-    addStudent: '学生を追加',
-    editStudent: '学生を編集',
+    addProduct: '商品を追加',
+    editProduct: '商品を編集',
     close: '閉じる',
     cancel: 'キャンセル',
     save: '保存',
     edit: '編集',
     delete: '削除',
-    allClasses: 'すべてのクラス',
+    allCategories: 'すべてのカテゴリ',
     allStatuses: 'すべての状態',
-    classFilterLabel: 'クラスで絞り込み',
+    categoryFilterLabel: 'カテゴリで絞り込み',
     statusFilterLabel: '状態で絞り込み',
-    searchPlaceholder: '氏名、学籍番号、電話番号で検索',
-    studentList: '学生一覧',
-    emptyState: '条件に一致する学生が見つかりません',
-    scoreDistribution: '成績分布',
-    scoreDistributionNote: '現在の学生一覧をもとに集計',
-    topScores: '成績トップ5',
-    topScoresNote: '優秀な学生をすばやく確認',
-    classOverview: 'クラス概要',
-    classOverviewNote: '学生数と平均点',
-    todoTitle: '確認事項',
-    todoNote: '学生の状態と出席データから作成',
+    searchPlaceholder: '商品名、SKU、仕入先で検索',
+    productList: '商品一覧',
+    emptyState: '条件に一致する商品が見つかりません',
+    stockDistribution: '在庫分布',
+    stockDistributionNote: '現在の商品在庫をもとに集計',
+    topSales: '販売数トップ5',
+    topSalesNote: '売れ筋商品をすばやく確認',
+    categoryOverview: 'カテゴリ概要',
+    categoryOverviewNote: '商品数と平均価格',
+    todoTitle: '運営リマインド',
+    todoNote: '在庫、状態、販売データから作成',
     nav: {
-      overview: '学生管理',
-      grades: '成績分析',
-      classes: 'クラス情報'
+      overview: '商品管理',
+      analytics: '販売分析',
+      categories: 'カテゴリ情報'
     },
     table: {
-      student: '学生',
-      studentNo: '学籍番号',
-      className: 'クラス',
-      score: '成績',
-      attendance: '出席率',
+      product: '商品',
+      sku: 'SKU',
+      category: 'カテゴリ',
+      price: '価格',
+      stock: '在庫',
       status: '状態',
-      phone: '電話番号',
+      supplier: '仕入先',
       actions: '操作'
     },
     form: {
-      name: '氏名',
-      studentNo: '学籍番号',
-      gender: '性別',
-      age: '年齢',
-      className: 'クラス',
-      phone: '電話番号',
-      score: '成績',
-      attendance: '出席率',
+      name: '商品名',
+      sku: 'SKU',
+      category: 'カテゴリ',
+      unit: '単位',
+      price: '価格',
+      stock: '在庫',
+      sales: '販売数',
+      supplier: '仕入先',
       status: '状態'
     },
-    gender: {
-      male: '男',
-      female: '女'
-    },
     status: {
-      active: '在学中',
-      suspended: '休学',
-      pending: '確認待ち'
+      active: '販売中',
+      lowStock: '在庫少',
+      draft: '下書き'
     },
     stats: {
-      totalStudents: '学生総数',
-      activeStudents: '在学中',
-      averageScore: '平均点',
+      totalProducts: '商品総数',
+      activeProducts: '販売中',
+      averagePrice: '平均価格',
       needsAttention: '要確認',
-      classCount: count => `${count} クラス`,
-      normalStatus: '状態は正常',
-      fullScore: '100点満点',
-      warningNote: '成績または出席に注意'
+      categoryCount: count => `${count} カテゴリ`,
+      normalStatus: '販売可能',
+      priceNote: '現在の商品から算出',
+      warningNote: '在庫または状態に注意'
     },
     todos: {
-      lowAttendance: count => `${count} 名の出席率が低めです`,
-      lowAttendanceDesc: '担任への確認をおすすめします',
-      pendingStatus: count => `${count} 件の状態確認が必要です`,
-      pendingStatusDesc: '学生一覧から状態を編集できます',
-      highScore: count => `${count} 名が90点以上です`,
-      highScoreDesc: '優秀学生リストの候補になります'
+      lowStock: count => `${count} 商品の在庫が少なめです`,
+      lowStockDesc: '早めの補充または在庫基準の見直しをおすすめします',
+      draft: count => `${count} 商品が下書きのままです`,
+      draftDesc: '状態を編集して販売中にできます',
+      hotSale: count => `${count} 商品が800件以上販売されています`,
+      hotSaleDesc: '重点プロモーション候補になります'
     },
     totalRecords: count => `全 ${count} 件`,
-    age: value => `${value} 歳`,
-    memberCount: count => `${count} 名`,
-    points: value => `${value} 点`,
-    confirmDelete: name => `${name} さんの記録を削除しますか？`,
-    csvName: 'students-ja.csv'
+    productCount: count => `${count} 商品`,
+    sales: value => `販売数 ${value}`,
+    confirmDelete: name => `${name} の記録を削除しますか？`,
+    csvName: 'products-ja.csv',
+    locale: 'ja-JP',
+    currency: 'JPY'
   },
   en: {
-    documentTitle: 'Student Management System',
-    brandMark: 'S',
-    appName: 'Student Management',
-    appSubtitle: 'Academic Office',
+    documentTitle: 'Product Management System',
+    brandMark: 'P',
+    appName: 'Product Management',
+    appSubtitle: 'Merchandising Desk',
     mainNav: 'Main navigation',
-    currentTerm: 'Current term',
-    termName: 'Spring 2026',
+    currentCycle: 'Current cycle',
+    cycleName: 'Spring 2026 Launch',
     language: 'Language',
     exportData: 'Export data',
-    addStudent: 'Add Student',
-    editStudent: 'Edit Student',
+    addProduct: 'Add Product',
+    editProduct: 'Edit Product',
     close: 'Close',
     cancel: 'Cancel',
     save: 'Save',
     edit: 'Edit',
     delete: 'Delete',
-    allClasses: 'All classes',
+    allCategories: 'All categories',
     allStatuses: 'All statuses',
-    classFilterLabel: 'Filter by class',
+    categoryFilterLabel: 'Filter by category',
     statusFilterLabel: 'Filter by status',
-    searchPlaceholder: 'Search name, ID, or phone',
-    studentList: 'Student List',
-    emptyState: 'No students match the current filters',
-    scoreDistribution: 'Score Distribution',
-    scoreDistributionNote: 'Calculated from the current student list',
-    topScores: 'Top 5 Scores',
-    topScoresNote: 'Quickly review high-performing students',
-    classOverview: 'Class Overview',
-    classOverviewNote: 'Student count and average score',
-    todoTitle: 'Follow-ups',
-    todoNote: 'Generated from status and attendance data',
+    searchPlaceholder: 'Search product, SKU, or supplier',
+    productList: 'Product List',
+    emptyState: 'No products match the current filters',
+    stockDistribution: 'Stock Distribution',
+    stockDistributionNote: 'Calculated from current inventory',
+    topSales: 'Top 5 Sales',
+    topSalesNote: 'Quickly review best-selling products',
+    categoryOverview: 'Category Overview',
+    categoryOverviewNote: 'Product count and average price',
+    todoTitle: 'Operations Follow-ups',
+    todoNote: 'Generated from stock, status, and sales data',
     nav: {
-      overview: 'Students',
-      grades: 'Grades',
-      classes: 'Classes'
+      overview: 'Products',
+      analytics: 'Sales Analytics',
+      categories: 'Categories'
     },
     table: {
-      student: 'Student',
-      studentNo: 'Student ID',
-      className: 'Class',
-      score: 'Score',
-      attendance: 'Attendance',
+      product: 'Product',
+      sku: 'SKU',
+      category: 'Category',
+      price: 'Price',
+      stock: 'Stock',
       status: 'Status',
-      phone: 'Phone',
+      supplier: 'Supplier',
       actions: 'Actions'
     },
     form: {
-      name: 'Name',
-      studentNo: 'Student ID',
-      gender: 'Gender',
-      age: 'Age',
-      className: 'Class',
-      phone: 'Phone',
-      score: 'Score',
-      attendance: 'Attendance Rate',
+      name: 'Product Name',
+      sku: 'SKU',
+      category: 'Category',
+      unit: 'Unit',
+      price: 'Price',
+      stock: 'Stock',
+      sales: 'Sales',
+      supplier: 'Supplier',
       status: 'Status'
     },
-    gender: {
-      male: 'Male',
-      female: 'Female'
-    },
     status: {
-      active: 'Enrolled',
-      suspended: 'On Leave',
-      pending: 'Pending'
+      active: 'Active',
+      lowStock: 'Low Stock',
+      draft: 'Draft'
     },
     stats: {
-      totalStudents: 'Total Students',
-      activeStudents: 'Enrolled',
-      averageScore: 'Average Score',
+      totalProducts: 'Total Products',
+      activeProducts: 'Active',
+      averagePrice: 'Average Price',
       needsAttention: 'Needs Review',
-      classCount: count => `${count} classes`,
-      normalStatus: 'Status normal',
-      fullScore: 'Out of 100',
-      warningNote: 'Score or attendance issue'
+      categoryCount: count => `${count} categories`,
+      normalStatus: 'Ready for sale',
+      priceNote: 'Across current products',
+      warningNote: 'Stock or status issue'
     },
     todos: {
-      lowAttendance: count => `${count} students have low attendance`,
-      lowAttendanceDesc: 'Check in with the homeroom teacher',
-      pendingStatus: count => `${count} records need status review`,
-      pendingStatusDesc: 'Edit status from the student list',
-      highScore: count => `${count} students scored 90 or higher`,
-      highScoreDesc: 'Good candidates for the honor list'
+      lowStock: count => `${count} products are low on stock`,
+      lowStockDesc: 'Restock soon or adjust inventory thresholds',
+      draft: count => `${count} products are still drafts`,
+      draftDesc: 'Edit status to publish them',
+      hotSale: count => `${count} products sold over 800 units`,
+      hotSaleDesc: 'Good candidates for promotion'
     },
     totalRecords: count => `${count} records`,
-    age: value => `${value} years old`,
-    memberCount: count => `${count} students`,
-    points: value => `${value} pts`,
+    productCount: count => `${count} products`,
+    sales: value => `${value} sold`,
     confirmDelete: name => `Delete ${name}'s record?`,
-    csvName: 'students-en.csv'
+    csvName: 'products-en.csv',
+    locale: 'en-US',
+    currency: 'USD'
   }
 }
 
@@ -597,31 +585,25 @@ const languageOptions = [
   { value: 'en', label: 'English' }
 ]
 
-const seedStudents = [
-  { id: 1, name: '佐藤 蓮', studentNo: 'S2026001', gender: 'male', age: 16, className: '1年A組', score: 92, attendance: 98, status: 'active', phone: '090-0001-2001' },
-  { id: 2, name: '鈴木 葵', studentNo: 'S2026002', gender: 'female', age: 15, className: '1年A組', score: 88, attendance: 95, status: 'active', phone: '090-0001-2002' },
-  { id: 3, name: '高橋 陽斗', studentNo: 'S2026003', gender: 'male', age: 16, className: '1年B組', score: 76, attendance: 89, status: 'active', phone: '090-0001-2003' },
-  { id: 4, name: '田中 美咲', studentNo: 'S2026004', gender: 'female', age: 15, className: '1年B組', score: 95, attendance: 99, status: 'active', phone: '090-0001-2004' },
-  { id: 5, name: '伊藤 悠真', studentNo: 'S2026005', gender: 'male', age: 17, className: '2年A組', score: 64, attendance: 82, status: 'pending', phone: '090-0001-2005' },
-  { id: 6, name: '山本 結衣', studentNo: 'S2026006', gender: 'female', age: 16, className: '2年A組', score: 84, attendance: 94, status: 'active', phone: '090-0001-2006' },
-  { id: 7, name: '中村 大翔', studentNo: 'S2026007', gender: 'male', age: 17, className: '2年B組', score: 58, attendance: 73, status: 'suspended', phone: '090-0001-2007' },
-  { id: 8, name: '小林 凛', studentNo: 'S2026008', gender: 'female', age: 16, className: '2年B組', score: 91, attendance: 97, status: 'active', phone: '090-0001-2008' }
+const seedProducts = [
+  { id: 1, name: 'スマートウォッチ S9', sku: 'PRD-2026-001', category: 'デジタル', unit: 'piece', price: 19800, stock: 86, sales: 1240, status: 'active', supplier: 'Tokyo Tech Supply' },
+  { id: 2, name: 'ワイヤレスイヤホン AirLite', sku: 'PRD-2026-002', category: 'デジタル', unit: 'set', price: 12800, stock: 42, sales: 980, status: 'active', supplier: 'Sound Bridge' },
+  { id: 3, name: 'ミニ加湿器 PureMist', sku: 'PRD-2026-003', category: '生活家電', unit: 'piece', price: 5600, stock: 18, sales: 460, status: 'lowStock', supplier: 'Home Lab' },
+  { id: 4, name: '折りたたみデスク StandFit', sku: 'PRD-2026-004', category: 'オフィス', unit: 'piece', price: 16800, stock: 64, sales: 720, status: 'active', supplier: 'Work Plus' },
+  { id: 5, name: '保温ボトル Thermo One', sku: 'PRD-2026-005', category: '生活雑貨', unit: 'piece', price: 3200, stock: 12, sales: 1180, status: 'lowStock', supplier: 'Daily Goods' },
+  { id: 6, name: 'LEDデスクライト Nova', sku: 'PRD-2026-006', category: 'オフィス', unit: 'piece', price: 7600, stock: 52, sales: 530, status: 'active', supplier: 'Light Studio' },
+  { id: 7, name: 'コットン収納ボックス', sku: 'PRD-2026-007', category: '生活雑貨', unit: 'box', price: 2400, stock: 95, sales: 330, status: 'draft', supplier: 'Daily Goods' },
+  { id: 8, name: 'ポータブル電源 MiniVolt', sku: 'PRD-2026-008', category: 'アウトドア', unit: 'piece', price: 43800, stock: 27, sales: 860, status: 'active', supplier: 'Outdoor Base' }
 ]
 
-const normalizeStudent = student => ({
-  ...student,
-  gender: normalizeGender(student.gender),
-  status: normalizeStatus(student.status)
+const normalizeProduct = product => ({
+  ...product,
+  status: normalizeStatus(product.status)
 })
 
-const normalizeGender = gender => {
-  if (['female', '女'].includes(gender)) return 'female'
-  return 'male'
-}
-
 const normalizeStatus = status => {
-  if (['suspended', '休学', 'On Leave'].includes(status)) return 'suspended'
-  if (['pending', '待确认', '確認待ち', 'Pending'].includes(status)) return 'pending'
+  if (['lowStock', '低库存', '在庫少', 'Low Stock'].includes(status)) return 'lowStock'
+  if (['draft', '草稿', '下書き', 'Draft'].includes(status)) return 'draft'
   return 'active'
 }
 
@@ -630,33 +612,33 @@ const loadLanguage = () => {
   return translations[saved] ? saved : 'ja'
 }
 
-const loadStudents = () => {
+const loadProducts = () => {
   try {
-    const saved = localStorage.getItem(studentStorageKey)
-    return saved ? JSON.parse(saved).map(normalizeStudent) : seedStudents
+    const saved = localStorage.getItem(productStorageKey)
+    return saved ? JSON.parse(saved).map(normalizeProduct) : seedProducts
   } catch {
-    return seedStudents
+    return seedProducts
   }
 }
 
 const language = ref(loadLanguage())
-const students = ref(loadStudents())
+const products = ref(loadProducts())
 const currentView = ref('overview')
 const query = ref('')
-const classFilter = ref('all')
+const categoryFilter = ref('all')
 const statusFilter = ref('all')
 const isModalOpen = ref(false)
 const editingId = ref(null)
 
 const emptyForm = () => ({
   name: '',
-  studentNo: '',
-  gender: 'male',
-  age: 16,
-  className: '1年A組',
-  phone: '',
-  score: 80,
-  attendance: 95,
+  sku: '',
+  category: 'デジタル',
+  unit: 'piece',
+  price: 1000,
+  stock: 50,
+  sales: 0,
+  supplier: '',
   status: 'active'
 })
 
@@ -669,85 +651,84 @@ watch(language, value => {
   document.title = translations[value].documentTitle
 }, { immediate: true })
 
-watch(students, value => {
-  localStorage.setItem(studentStorageKey, JSON.stringify(value))
+watch(products, value => {
+  localStorage.setItem(productStorageKey, JSON.stringify(value))
 }, { deep: true })
 
 const navItems = [
   { id: 'overview', icon: LayoutDashboard },
-  { id: 'grades', icon: BookOpen },
-  { id: 'classes', icon: ClipboardList }
+  { id: 'analytics', icon: BarChart3 },
+  { id: 'categories', icon: Tags }
 ]
 
 const pageTitle = computed(() => text.value.nav[currentView.value] || text.value.nav.overview)
+const categories = computed(() => [...new Set(products.value.map(product => product.category))].sort())
 
-const classes = computed(() => [...new Set(students.value.map(student => student.className))].sort())
-
-const filteredStudents = computed(() => {
+const filteredProducts = computed(() => {
   const keyword = query.value.toLowerCase()
-  return students.value.filter(student => {
-    const matchQuery = [student.name, student.studentNo, student.phone, student.className].some(value => value.toLowerCase().includes(keyword))
-    const matchClass = classFilter.value === 'all' || student.className === classFilter.value
-    const matchStatus = statusFilter.value === 'all' || student.status === statusFilter.value
-    return matchQuery && matchClass && matchStatus
+  return products.value.filter(product => {
+    const matchQuery = [product.name, product.sku, product.supplier, product.category].some(value => String(value).toLowerCase().includes(keyword))
+    const matchCategory = categoryFilter.value === 'all' || product.category === categoryFilter.value
+    const matchStatus = statusFilter.value === 'all' || product.status === statusFilter.value
+    return matchQuery && matchCategory && matchStatus
   })
 })
 
-const averageScore = computed(() => {
-  if (!students.value.length) return 0
-  return Math.round(students.value.reduce((sum, student) => sum + Number(student.score), 0) / students.value.length)
+const averagePrice = computed(() => {
+  if (!products.value.length) return 0
+  return Math.round(products.value.reduce((sum, product) => sum + Number(product.price), 0) / products.value.length)
 })
 
-const activeCount = computed(() => students.value.filter(student => student.status === 'active').length)
-const warningCount = computed(() => students.value.filter(student => student.score < 70 || student.attendance < 85 || student.status !== 'active').length)
+const activeCount = computed(() => products.value.filter(product => product.status === 'active').length)
+const attentionCount = computed(() => products.value.filter(product => product.stock < 25 || product.status !== 'active').length)
 
 const stats = computed(() => [
-  { label: text.value.stats.totalStudents, value: students.value.length, note: text.value.stats.classCount(classes.value.length), icon: Users, tone: 'blue' },
-  { label: text.value.stats.activeStudents, value: activeCount.value, note: text.value.stats.normalStatus, icon: UserCheck, tone: 'green' },
-  { label: text.value.stats.averageScore, value: averageScore.value, note: text.value.stats.fullScore, icon: GraduationCap, tone: 'amber' },
-  { label: text.value.stats.needsAttention, value: warningCount.value, note: text.value.stats.warningNote, icon: TriangleAlert, tone: 'red' }
+  { label: text.value.stats.totalProducts, value: products.value.length, note: text.value.stats.categoryCount(categories.value.length), icon: Package, tone: 'blue' },
+  { label: text.value.stats.activeProducts, value: activeCount.value, note: text.value.stats.normalStatus, icon: Boxes, tone: 'green' },
+  { label: text.value.stats.averagePrice, value: formatPrice(averagePrice.value), note: text.value.stats.priceNote, icon: ClipboardList, tone: 'amber' },
+  { label: text.value.stats.needsAttention, value: attentionCount.value, note: text.value.stats.warningNote, icon: TriangleAlert, tone: 'red' }
 ])
 
-const topStudents = computed(() => [...students.value].sort((a, b) => b.score - a.score).slice(0, 5))
+const topProducts = computed(() => [...products.value].sort((a, b) => b.sales - a.sales).slice(0, 5))
 
-const scoreBuckets = computed(() => {
+const stockBuckets = computed(() => {
   const buckets = [
-    { label: '90-100', min: 90, max: 100 },
-    { label: '80-89', min: 80, max: 89 },
-    { label: '70-79', min: 70, max: 79 },
-    { label: '60-69', min: 60, max: 69 },
-    { label: '0-59', min: 0, max: 59 }
+    { label: '80+', min: 80, max: Number.POSITIVE_INFINITY },
+    { label: '50-79', min: 50, max: 79 },
+    { label: '25-49', min: 25, max: 49 },
+    { label: '1-24', min: 1, max: 24 },
+    { label: '0', min: 0, max: 0 }
   ]
-  const total = students.value.length || 1
+  const total = products.value.length || 1
   return buckets.map(bucket => {
-    const count = students.value.filter(student => student.score >= bucket.min && student.score <= bucket.max).length
+    const count = products.value.filter(product => product.stock >= bucket.min && product.stock <= bucket.max).length
     return { ...bucket, count, percent: Math.round((count / total) * 100) }
   })
 })
 
-const classSummary = computed(() => classes.value.map(className => {
-  const members = students.value.filter(student => student.className === className)
-  const average = members.length
-    ? Math.round(members.reduce((sum, student) => sum + Number(student.score), 0) / members.length)
+const categorySummary = computed(() => categories.value.map(category => {
+  const members = products.value.filter(product => product.category === category)
+  const averagePrice = members.length
+    ? Math.round(members.reduce((sum, product) => sum + Number(product.price), 0) / members.length)
     : 0
-  return { className, count: members.length, average }
+  return { category, count: members.length, averagePrice }
 }))
 
 const todos = computed(() => [
   {
-    title: text.value.todos.lowAttendance(students.value.filter(student => student.attendance < 85).length),
-    desc: text.value.todos.lowAttendanceDesc,
+    title: text.value.todos.lowStock(products.value.filter(product => product.stock < 25).length),
+    desc: text.value.todos.lowStockDesc,
     icon: TriangleAlert
   },
   {
-    title: text.value.todos.pendingStatus(students.value.filter(student => student.status === 'pending').length),
-    desc: text.value.todos.pendingStatusDesc,
+    title: text.value.todos.draft(products.value.filter(product => product.status === 'draft').length),
+    desc: text.value.todos.draftDesc,
     icon: ClipboardList
   },
   {
-    title: text.value.todos.highScore(students.value.filter(student => student.score >= 90).length),
-    desc: text.value.todos.highScoreDesc,
-    icon: GraduationCap
+    title: text.value.todos.hotSale(products.value.filter(product => product.sales >= 800).length),
+    desc: text.value.todos.hotSaleDesc,
+    icon: BarChart3
   }
 ])
 
@@ -761,9 +742,9 @@ const openCreateModal = () => {
   isModalOpen.value = true
 }
 
-const openEditModal = student => {
-  editingId.value = student.id
-  resetForm(student)
+const openEditModal = product => {
+  editingId.value = product.id
+  resetForm(product)
   isModalOpen.value = true
 }
 
@@ -771,58 +752,64 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
-const saveStudent = () => {
+const saveProduct = () => {
   const payload = {
     ...form,
-    age: Number(form.age),
-    score: Math.min(100, Math.max(0, Number(form.score))),
-    attendance: Math.min(100, Math.max(0, Number(form.attendance)))
+    price: Math.max(0, Number(form.price)),
+    stock: Math.max(0, Number(form.stock)),
+    sales: Math.max(0, Number(form.sales))
   }
 
   if (editingId.value) {
-    students.value = students.value.map(student => student.id === editingId.value ? { ...student, ...payload } : student)
+    products.value = products.value.map(product => product.id === editingId.value ? { ...product, ...payload } : product)
   } else {
-    students.value = [{ id: Date.now(), ...payload }, ...students.value]
+    products.value = [{ id: Date.now(), ...payload }, ...products.value]
   }
 
   closeModal()
 }
 
-const removeStudent = id => {
-  const target = students.value.find(student => student.id === id)
+const removeProduct = id => {
+  const target = products.value.find(product => product.id === id)
   if (target && window.confirm(text.value.confirmDelete(target.name))) {
-    students.value = students.value.filter(student => student.id !== id)
+    products.value = products.value.filter(product => product.id !== id)
   }
 }
 
 const statusTone = status => {
   if (status === 'active') return 'ok'
-  if (status === 'suspended') return 'danger'
-  return 'pending'
+  if (status === 'draft') return 'pending'
+  return 'danger'
 }
 
-const exportStudents = () => {
+const stockPercent = stock => Math.min(100, Math.max(0, Math.round((Number(stock) / 100) * 100)))
+
+const formatPrice = value => new Intl.NumberFormat(text.value.locale, {
+  style: 'currency',
+  currency: text.value.currency,
+  maximumFractionDigits: 0
+}).format(Number(value))
+
+const exportProducts = () => {
   const header = [
-    text.value.table.student,
-    text.value.table.studentNo,
-    text.value.form.gender,
-    text.value.form.age,
-    text.value.table.className,
-    text.value.table.score,
-    text.value.table.attendance,
+    text.value.table.product,
+    text.value.table.sku,
+    text.value.table.category,
+    text.value.table.price,
+    text.value.table.stock,
+    text.value.form.sales,
     text.value.table.status,
-    text.value.table.phone
+    text.value.table.supplier
   ]
-  const rows = students.value.map(student => [
-    student.name,
-    student.studentNo,
-    text.value.gender[student.gender],
-    student.age,
-    student.className,
-    student.score,
-    student.attendance,
-    text.value.status[student.status],
-    student.phone
+  const rows = products.value.map(product => [
+    product.name,
+    product.sku,
+    product.category,
+    product.price,
+    product.stock,
+    product.sales,
+    text.value.status[product.status],
+    product.supplier
   ])
   const csv = [header, ...rows].map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n')
   const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
