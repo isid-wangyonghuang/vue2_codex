@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS vehicles;
+
+CREATE TABLE vehicles (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  stock_no VARCHAR(40) NOT NULL UNIQUE,
+  maker VARCHAR(40) NOT NULL,
+  year INT NOT NULL,
+  mileage INT NOT NULL,
+  price BIGINT NOT NULL,
+  status VARCHAR(30) NOT NULL,
+  store VARCHAR(80) NOT NULL,
+  fuel VARCHAR(40) NOT NULL,
+  transmission VARCHAR(20) NOT NULL,
+  inspection VARCHAR(20) NOT NULL
+);

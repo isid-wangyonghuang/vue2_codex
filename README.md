@@ -1,0 +1,72 @@
+# 中古車管理システム
+
+Java + Spring Boot + MyBatis + Vue.js で構成した中古車管理システムです。
+
+## 技術構成
+
+- Frontend: Vue 3, Vite, lucide-vue
+- Backend: Java 17, Spring Boot, MyBatis
+- Database: H2 Database
+- API: REST API
+
+## 主な機能
+
+- 在庫車両一覧表示
+- 車名、管理番号、店舗検索
+- メーカー、状態フィルタ
+- 車両の登録、編集、削除
+- 価格帯分析
+- 低走行車両ランキング
+- メーカー別在庫集計
+- 車検、整備、高走行リマインド
+- CSV 書き出し
+
+## バックエンド起動
+
+Maven をインストールした状態で実行します。
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+API は `http://127.0.0.1:8080/api/vehicles` で起動します。
+
+H2 Console は `http://127.0.0.1:8080/h2-console` で確認できます。
+
+接続情報:
+
+- JDBC URL: `jdbc:h2:mem:usedcar`
+- User: `sa`
+- Password: 空
+
+## フロントエンド起動
+
+```bash
+npm install
+npm run dev
+```
+
+画面は `http://127.0.0.1:5173/` で確認できます。
+
+Vite の proxy により、フロントエンドから `/api/vehicles` へアクセスすると Spring Boot API に転送されます。
+
+## ビルド
+
+```bash
+npm run build
+```
+
+## API 一覧
+
+| Method | Path | 内容 |
+| --- | --- | --- |
+| GET | `/api/vehicles` | 車両一覧取得 |
+| GET | `/api/vehicles/{id}` | 車両詳細取得 |
+| POST | `/api/vehicles` | 車両登録 |
+| PUT | `/api/vehicles/{id}` | 車両更新 |
+| DELETE | `/api/vehicles/{id}` | 車両削除 |
+
+## 補足
+
+Spring Boot API が起動していない場合、Vue 画面はデモデータを表示します。API を起動すると H2 データベース上のデータに切り替わります。

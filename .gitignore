@@ -3,3 +3,4 @@ dist/
 vite-dev*.log
 .vscode/
 .DS_Store
+backend/target/

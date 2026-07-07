@@ -5,7 +5,7 @@
         <div class="brand-mark">車</div>
         <div>
           <p>中古車管理システム</p>
-          <span>在庫・販売管理</span>
+          <span>Spring Boot + MyBatis</span>
         </div>
       </div>
 
@@ -24,8 +24,8 @@
       </nav>
 
       <div class="sidebar-footer">
-        <p>管理期間</p>
-        <strong>2026年 7月</strong>
+        <p>API</p>
+        <strong>{{ apiStatusLabel }}</strong>
       </div>
     </aside>
 
@@ -36,6 +36,9 @@
           <h1>{{ pageTitle }}</h1>
         </div>
         <div class="topbar-actions">
+          <button type="button" class="icon-button" title="再読み込み" @click="loadVehicles">
+            <RefreshCw :size="19" aria-hidden="true" />
+          </button>
           <button type="button" class="icon-button" title="CSVを書き出す" @click="exportVehicles">
             <Download :size="19" aria-hidden="true" />
           </button>
@@ -45,6 +48,10 @@
           </button>
         </div>
       </header>
+
+      <div v-if="apiError" class="api-banner">
+        {{ apiError }}
+      </div>
 
       <section v-if="currentView === 'overview'" class="content-stack">
         <div class="stats-grid">
@@ -62,7 +69,7 @@
           <div class="panel-header">
             <div>
               <h2>在庫車両一覧</h2>
-              <p>全 {{ filteredVehicles.length }} 件</p>
+              <p>{{ isLoading ? '読み込み中...' : `全 ${filteredVehicles.length} 件` }}</p>
             </div>
             <div class="filters">
               <label class="search-field">
@@ -283,7 +290,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import {
   BarChart3,
   CalendarClock,
@@ -293,6 +300,7 @@ import {
   LayoutDashboard,
   Pencil,
   Plus,
+  RefreshCw,
   Save,
   Search,
   Tags,
@@ -302,7 +310,7 @@ import {
   X
 } from '@lucide/vue'
 
-const vehicleStorageKey = 'used-car-management-data-ja'
+const apiUrl = '/api/vehicles'
 const statusOptions = ['available', 'reserved', 'sold', 'maintenance']
 
 const statusLabels = {
@@ -323,27 +331,16 @@ const seedVehicles = [
   { id: 8, name: 'BMW 320i M Sport', stockNo: 'UC-2026-008', maker: 'BMW', year: 2021, mileage: 33500, price: 3480000, status: 'available', store: '東京本店', fuel: 'ガソリン', transmission: 'AT', inspection: '2027/06' }
 ]
 
-const loadVehicles = () => {
-  try {
-    const saved = localStorage.getItem(vehicleStorageKey)
-    return saved ? JSON.parse(saved).map(normalizeVehicle) : seedVehicles
-  } catch {
-    return seedVehicles
-  }
-}
-
-const normalizeVehicle = vehicle => ({
-  ...vehicle,
-  status: statusOptions.includes(vehicle.status) ? vehicle.status : 'available'
-})
-
-const vehicles = ref(loadVehicles())
+const vehicles = ref([])
 const currentView = ref('overview')
 const query = ref('')
 const makerFilter = ref('all')
 const statusFilter = ref('all')
 const isModalOpen = ref(false)
 const editingId = ref(null)
+const isLoading = ref(false)
+const apiError = ref('')
+const apiConnected = ref(false)
 
 const emptyForm = () => ({
   name: '',
@@ -361,10 +358,6 @@ const emptyForm = () => ({
 
 const form = reactive(emptyForm())
 
-watch(vehicles, value => {
-  localStorage.setItem(vehicleStorageKey, JSON.stringify(value))
-}, { deep: true })
-
 document.documentElement.lang = 'ja'
 document.title = '中古車管理システム'
 
@@ -374,6 +367,7 @@ const navItems = [
   { id: 'makers', label: 'メーカー情報', icon: Tags }
 ]
 
+const apiStatusLabel = computed(() => apiConnected.value ? 'Spring API 接続中' : 'デモデータ表示')
 const pageTitle = computed(() => navItems.find(item => item.id === currentView.value)?.label || '車両管理')
 const makers = computed(() => [...new Set(vehicles.value.map(vehicle => vehicle.maker))].sort())
 
@@ -444,6 +438,33 @@ const todos = computed(() => [
   }
 ])
 
+const requestJson = async (url, options = {}) => {
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options
+  })
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`)
+  }
+  if (response.status === 204) return null
+  return response.json()
+}
+
+const loadVehicles = async () => {
+  isLoading.value = true
+  try {
+    vehicles.value = await requestJson(apiUrl)
+    apiConnected.value = true
+    apiError.value = ''
+  } catch {
+    vehicles.value = seedVehicles
+    apiConnected.value = false
+    apiError.value = 'Spring Boot API に接続できないため、デモデータを表示しています。backend を起動すると DB データに切り替わります。'
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const resetForm = values => {
   Object.assign(form, emptyForm(), values)
 }
@@ -464,7 +485,7 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
-const saveVehicle = () => {
+const saveVehicle = async () => {
   const payload = {
     ...form,
     year: Number(form.year),
@@ -472,7 +493,20 @@ const saveVehicle = () => {
     price: Math.max(0, Number(form.price))
   }
 
-  if (editingId.value) {
+  if (apiConnected.value) {
+    if (editingId.value) {
+      await requestJson(`${apiUrl}/${editingId.value}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      })
+    } else {
+      await requestJson(apiUrl, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+    }
+    await loadVehicles()
+  } else if (editingId.value) {
     vehicles.value = vehicles.value.map(vehicle => vehicle.id === editingId.value ? { ...vehicle, ...payload } : vehicle)
   } else {
     vehicles.value = [{ id: Date.now(), ...payload }, ...vehicles.value]
@@ -481,9 +515,14 @@ const saveVehicle = () => {
   closeModal()
 }
 
-const removeVehicle = id => {
+const removeVehicle = async id => {
   const target = vehicles.value.find(vehicle => vehicle.id === id)
-  if (target && window.confirm(`${target.name} の記録を削除しますか？`)) {
+  if (!target || !window.confirm(`${target.name} の記録を削除しますか？`)) return
+
+  if (apiConnected.value) {
+    await requestJson(`${apiUrl}/${id}`, { method: 'DELETE' })
+    await loadVehicles()
+  } else {
     vehicles.value = vehicles.value.filter(vehicle => vehicle.id !== id)
   }
 }
@@ -534,4 +573,6 @@ const exportVehicles = () => {
   link.click()
   URL.revokeObjectURL(link.href)
 }
+
+onMounted(loadVehicles)
 </script>
