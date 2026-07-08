@@ -66,6 +66,7 @@ npm run build
 | POST | `/api/vehicles` | 車両登録 |
 | PUT | `/api/vehicles/{id}` | 車両更新 |
 | DELETE | `/api/vehicles/{id}` | 車両削除 |
+| GET | `/api/master-data` | メーカー、店舗、車両状態の主データ取得 |
 
 ## データベース練習用テーブル
 
@@ -77,6 +78,8 @@ npm run build
 - `vehicles`
 
 `vehicles` は `maker_id`、`store_id`、`status_code` を持ち、MyBatis の XML Mapper で JOIN して画面表示用データを返します。
+
+Vue の登録・編集フォームでは `/api/master-data` から取得した `makers`、`stores`、`vehicle_statuses` を下拉選択として使用します。
 
 詳しい表構成と練習 SQL は [DATABASE_PRACTICE.md](./DATABASE_PRACTICE.md) を確認してください。
 

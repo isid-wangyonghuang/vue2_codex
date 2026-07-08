@@ -315,9 +315,10 @@ import {
 } from '@lucide/vue'
 
 const apiUrl = '/api/vehicles'
-const statusOptions = ['available', 'reserved', 'sold', 'maintenance']
+const masterDataUrl = '/api/master-data'
+const fallbackStatusOptions = ['available', 'reserved', 'sold', 'maintenance']
 
-const statusLabels = {
+const fallbackStatusLabels = {
   available: '販売中',
   reserved: '商談中',
   sold: '成約済み',
@@ -345,6 +346,9 @@ const editingId = ref(null)
 const isLoading = ref(false)
 const apiError = ref('')
 const apiConnected = ref(false)
+const masterMakers = ref([])
+const masterStores = ref([])
+const masterStatuses = ref([])
 
 const emptyForm = () => ({
   name: '',
@@ -373,8 +377,16 @@ const navItems = [
 
 const apiStatusLabel = computed(() => apiConnected.value ? 'Spring API 接続中' : 'デモデータ表示')
 const pageTitle = computed(() => navItems.find(item => item.id === currentView.value)?.label || '車両管理')
-const makers = computed(() => [...new Set(vehicles.value.map(vehicle => vehicle.maker))].sort())
-const stores = computed(() => [...new Set(vehicles.value.map(vehicle => vehicle.store))].sort())
+const makers = computed(() => masterMakers.value.length ? masterMakers.value.map(maker => maker.name) : [...new Set(vehicles.value.map(vehicle => vehicle.maker))].sort())
+const stores = computed(() => masterStores.value.length ? masterStores.value.map(store => store.name) : [...new Set(vehicles.value.map(vehicle => vehicle.store))].sort())
+const statusOptions = computed(() => masterStatuses.value.length ? masterStatuses.value.map(status => status.code) : fallbackStatusOptions)
+const statusLabels = computed(() => {
+  if (!masterStatuses.value.length) return fallbackStatusLabels
+  return masterStatuses.value.reduce((labels, status) => {
+    labels[status.code] = status.label
+    return labels
+  }, {})
+})
 
 const filteredVehicles = computed(() => {
   const keyword = query.value.toLowerCase()
@@ -470,6 +482,19 @@ const loadVehicles = async () => {
   }
 }
 
+const loadMasterData = async () => {
+  try {
+    const masterData = await requestJson(masterDataUrl)
+    masterMakers.value = masterData.makers || []
+    masterStores.value = masterData.stores || []
+    masterStatuses.value = masterData.statuses || []
+  } catch {
+    masterMakers.value = []
+    masterStores.value = []
+    masterStatuses.value = []
+  }
+}
+
 const resetForm = values => {
   Object.assign(form, emptyForm(), values)
 }
@@ -477,6 +502,8 @@ const resetForm = values => {
 const openCreateModal = () => {
   editingId.value = null
   resetForm()
+  if (makers.value[0]) form.maker = makers.value[0]
+  if (stores.value[0]) form.store = stores.value[0]
   isModalOpen.value = true
 }
 
@@ -564,7 +591,7 @@ const exportVehicles = () => {
     vehicle.year,
     vehicle.mileage,
     vehicle.price,
-    statusLabels[vehicle.status],
+    statusLabels.value[vehicle.status],
     vehicle.store,
     vehicle.fuel,
     vehicle.transmission,
@@ -579,5 +606,7 @@ const exportVehicles = () => {
   URL.revokeObjectURL(link.href)
 }
 
-onMounted(loadVehicles)
+onMounted(async () => {
+  await Promise.all([loadMasterData(), loadVehicles()])
+})
 </script>

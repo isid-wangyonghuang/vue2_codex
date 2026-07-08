@@ -139,11 +139,43 @@ WHERE v.status_code = 'available';
 ## 前后端对应关系
 
 - Vue 页面调用 `/api/vehicles`
+- Vue 表单调用 `/api/master-data` 获取厂家、门店、状态下拉框
 - Spring Boot Controller 接收请求
 - Service 调用 Mapper
 - MyBatis XML 执行 JOIN SQL
 - H2 数据库返回多表关联结果
 - Vue 表格显示厂家、门店、状态等文字
+
+## 主数据 API
+
+新增的主数据 API:
+
+```text
+GET /api/master-data
+```
+
+返回示例:
+
+```json
+{
+  "makers": [
+    { "id": 1, "name": "トヨタ", "country": "日本" }
+  ],
+  "stores": [
+    { "id": 1, "name": "東京本店", "prefecture": "東京都", "phone": "03-0000-1001" }
+  ],
+  "statuses": [
+    { "code": "available", "label": "販売中", "displayOrder": 1 }
+  ]
+}
+```
+
+对应代码:
+
+- `MasterDataController`
+- `MasterDataService`
+- `MasterDataMapper`
+- `MasterDataMapper.xml`
 
 ## 启动顺序
 
