@@ -5,7 +5,7 @@ Java + Spring Boot + MyBatis + Vue.js で構成した中古車管理システム
 ## 技術構成
 
 - Frontend: Vue 3, Vite, lucide-vue
-- Backend: Java 17, Spring Boot, MyBatis
+- Backend: Java 25, Spring Boot, MyBatis
 - Database: H2 Database
 - API: REST API
 
@@ -59,14 +59,14 @@ npm run build
 
 ## API 一覧
 
-| Method | Path | 内容 |
-| --- | --- | --- |
-| GET | `/api/vehicles` | 車両一覧取得 |
-| GET | `/api/vehicles/{id}` | 車両詳細取得 |
-| POST | `/api/vehicles` | 車両登録 |
-| PUT | `/api/vehicles/{id}` | 車両更新 |
-| DELETE | `/api/vehicles/{id}` | 車両削除 |
-| GET | `/api/master-data` | メーカー、店舗、車両状態の主データ取得 |
+| Method | Path                 | 内容                                   |
+| ------ | -------------------- | -------------------------------------- |
+| GET    | `/api/vehicles`      | 車両一覧取得                           |
+| GET    | `/api/vehicles/{id}` | 車両詳細取得                           |
+| POST   | `/api/vehicles`      | 車両登録                               |
+| PUT    | `/api/vehicles/{id}` | 車両更新                               |
+| DELETE | `/api/vehicles/{id}` | 車両削除                               |
+| GET    | `/api/master-data`   | メーカー、店舗、車両状態の主データ取得 |
 
 ## データベース練習用テーブル
 
