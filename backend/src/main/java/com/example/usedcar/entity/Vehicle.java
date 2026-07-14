@@ -11,6 +11,7 @@ public class Vehicle {
   private String status;
   private String store;
   private String fuel;
+  private String color;
   private String transmission;
   private String inspection;
 
@@ -92,6 +93,14 @@ public class Vehicle {
 
   public void setFuel(String fuel) {
     this.fuel = fuel;
+  }
+
+  public String getColor() {
+    return color;
+  }
+
+  public void setColor(String color) {
+    this.color = color;
   }
 
   public String getTransmission() {
