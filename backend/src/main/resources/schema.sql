@@ -33,6 +33,7 @@ CREATE TABLE vehicles (
   mileage INT NOT NULL,
   price BIGINT NOT NULL,
   fuel VARCHAR(40) NOT NULL,
+  color VARCHAR(40) DEFAULT '未設定' NOT NULL,
   transmission VARCHAR(20) NOT NULL,
   inspection VARCHAR(20) NOT NULL,
   CONSTRAINT fk_vehicles_maker

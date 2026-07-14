@@ -8,12 +8,13 @@
     <result property="name" column="name"/>
     <result property="stockNo" column="stock_no"/>
     <result property="maker" column="maker"/>
-    <result property="year" column="year"/>
+    <result property="year" column="model_year"/>
     <result property="mileage" column="mileage"/>
     <result property="price" column="price"/>
     <result property="status" column="status"/>
     <result property="store" column="store"/>
     <result property="fuel" column="fuel"/>
+    <result property="color" column="color"/>
     <result property="transmission" column="transmission"/>
     <result property="inspection" column="inspection"/>
   </resultMap>
@@ -23,12 +24,13 @@
     v.name,
     v.stock_no,
     m.name AS maker,
-    v.model_year AS year,
+    v.model_year,
     v.mileage,
     v.price,
     s.code AS status,
     st.name AS store,
     v.fuel,
+    v.color,
     v.transmission,
     v.inspection
   </sql>
@@ -54,7 +56,7 @@
 
   <insert id="insert" parameterType="Vehicle" useGeneratedKeys="true" keyProperty="id">
     INSERT INTO vehicles (
-      name, stock_no, maker_id, store_id, status_code, model_year, mileage, price, fuel, transmission, inspection
+      name, stock_no, maker_id, store_id, status_code, model_year, mileage, price, fuel, color, transmission, inspection
     ) VALUES (
       #{name},
       #{stockNo},
@@ -65,6 +67,7 @@
       #{mileage},
       #{price},
       #{fuel},
+      #{color},
       #{transmission},
       #{inspection}
     )
@@ -82,6 +85,7 @@
       mileage = #{mileage},
       price = #{price},
       fuel = #{fuel},
+      color = #{color},
       transmission = #{transmission},
       inspection = #{inspection}
     WHERE id = #{id}
